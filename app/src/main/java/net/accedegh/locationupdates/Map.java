@@ -122,6 +122,7 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
     private HubProxy mainHubProxy  ;
     private TextView mLogger;
     private Handler handler;
+    private String pinMode;
     //private Marker marker;
     LatLng position;
     String[] temp;
@@ -157,22 +158,7 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
-        //Set Custom BitMap for Pointer
-        int height = 80;
-        int width = 45;
-        BitmapDrawable bitmapdraw = (BitmapDrawable) getResources().getDrawable(R.mipmap.icon_car);
-        Bitmap b = bitmapdraw.getBitmap();
-        Bitmap smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
-
         mMap = googleMap;
-        LatLng hcmus = new LatLng(5.577041, -0.208626);
-        mMap.addMarker(new MarkerOptions().position(new LatLng(5.577041, -0.208626))
-                //.icon(BitmapDescriptorFactory.fromResource(R.drawable.pin3))
-                .icon(BitmapDescriptorFactory.fromBitmap((smallMarker)))
-                .title("Location")
-                .draggable(true)
-                .snippet("First Marker")).showInfoWindow();
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(hcmus, 16));
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
@@ -187,12 +173,14 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
             return;
         }
         mMap.setMyLocationEnabled(true);
-        // SignalRClient.connectSignalr();
     }
-
+    Marker mk = null;
     // Add A Map Pointer To The MAp Fragment
-    public void addNewBikerMarker(GoogleMap googleMap, double lat, double lon) {
+    public void addMarker(GoogleMap googleMap, double lat, double lon) {
 
+        if(pinMode=="initialized"){
+            animateMarker(mLastLocation,mk);
+        }
         //Set Custom BitMap for Pointer
         int height = 80;
         int width = 45;
@@ -200,18 +188,20 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
         Bitmap b = bitmapdraw.getBitmap();
         Bitmap smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
         mMap = googleMap;
-        mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon))
+
+        LatLng latlong = new LatLng(lat, lon);
+       mk= mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon))
                 //.icon(BitmapDescriptorFactory.fromResource(R.drawable.pin3))
-                .icon(BitmapDescriptorFactory.fromBitmap((smallMarker)))
-                .title("Biker")
-                .draggable(true)
-                .snippet("Available Biker")).showInfoWindow();
+                .icon(BitmapDescriptorFactory.fromBitmap((smallMarker))));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlong, 16));
+        pinMode="initialized";
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             return;
         }
         mMap.setMyLocationEnabled(true);
+        startLocationUpdates();
     }
 
     //Marker Click Events
@@ -256,10 +246,6 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
     }
 
 
-    /**
-     * METHODS
-     *
-     * */
     public boolean getServicesAvailable() {
         GoogleApiAvailability api = GoogleApiAvailability.getInstance();
         int isAvailable = api.isGooglePlayServicesAvailable(this);
@@ -417,7 +403,7 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
                 Toast.makeText(this,loc, Toast.LENGTH_SHORT).show();
 
                 //Add pointer to the map at location
-                addNewBikerMarker(mMap,latitude,longitude);
+                addMarker(mMap,latitude,longitude);
 
 
             } else {
@@ -539,19 +525,6 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
     }
 
 
-    /**
-     * POINTER ANIMATION
-     *
-     * */
-
-
-
-    /**
-     * Method to animate marker to destination location
-     * @param destination destination location (must contain bearing attribute, to ensure
-     *                    marker rotation will work correctly)
-     * @param marker marker to be animated
-     */
     public static void animateMarker(final Location destination, final Marker marker) {
         if (marker != null) {
             final LatLng startPosition = marker.getPosition();
