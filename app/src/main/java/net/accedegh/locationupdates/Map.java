@@ -3,46 +3,16 @@ package net.accedegh.locationupdates;
 import android.Manifest;
 import android.animation.ValueAnimator;
 import android.app.Dialog;
-import android.app.ProgressDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
-import android.location.LocationManager;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.SystemClock;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.view.animation.BounceInterpolator;
-import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -50,47 +20,18 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.Places;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.gson.JsonElement;
-
-import net.accedegh.locationupdates.utils.MapsApi.DirectionFinder;
-import net.accedegh.locationupdates.utils.MapsApi.DirectionFinderListener;
-import net.accedegh.locationupdates.utils.MapsApi.Route;
-
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import microsoft.aspnet.signalr.client.Action;
-import microsoft.aspnet.signalr.client.Platform;
-import microsoft.aspnet.signalr.client.SignalRFuture;
-import microsoft.aspnet.signalr.client.http.android.AndroidPlatformComponent;
-import microsoft.aspnet.signalr.client.hubs.HubConnection;
-import microsoft.aspnet.signalr.client.hubs.HubProxy;
 
 
-//http://www.androidhive.info/2015/02/android-location-api-using-google-play-services/
-//https://habrahabr.ru/post/301752/
 
-//FragmentActivity
 public class Map extends FragmentActivity implements OnMapReadyCallback,
-        DirectionFinderListener,GoogleMap.OnMarkerClickListener,
         GoogleMap.OnInfoWindowClickListener,GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
@@ -102,32 +43,18 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
     // boolean flag to toggle periodic location updates
     private boolean mRequestingLocationUpdates = false;
     private LocationRequest mLocationRequest;
-    // Location updates intervals in sec
-    private static int UPDATE_INTERVAL = 3000; // 3 sec
-    private static int FATEST_INTERVAL = 3000; // 5 sec
-    private static int DISPLACEMENT = 10; // 10 meters
     private static final String TAG = "";
-
-
     private GoogleMap mMap;
-    private Button btnFindPath, btnlocation;
-    private EditText etOrigin;
-    private EditText etDestination;
-    private List<Marker> originMarkers = new ArrayList<>();
-    private List<Marker> destinationMarkers = new ArrayList<>();
-    private List<Polyline> polylinePaths = new ArrayList<>();
-    private ProgressDialog progressDialog;
     private int markerCount;
-
-    //private Marker marker;
-    LatLng position;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+
         markerCount=0;
+
         //Check If Google Services Is Available
         if (getServicesAvailable()) {
             // Building the GoogleApi client
@@ -140,7 +67,6 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        //togglePeriodicLocationUpdates();
 
     }
 
@@ -169,8 +95,9 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
         }
         mMap.setMyLocationEnabled(true);
     }
+
     Marker mk = null;
-    // Add A Map Pointer To The MAp Fragment
+    // Add A Map Pointer To The MAp
     public void addMarker(GoogleMap googleMap, double lat, double lon) {
 
         if(markerCount==1){
@@ -202,45 +129,9 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
             //mMap.setMyLocationEnabled(true);
             startLocationUpdates();
         }
-
     }
 
-    //Marker Click Events
-    @Override
-    public boolean onMarkerClick(final Marker marker) {
-        //Make the marker bounce
-        final Handler handler = new Handler();
 
-        final long startTime = SystemClock.uptimeMillis();
-        final long duration = 2000;
-
-        Projection proj = mMap.getProjection();
-        final LatLng markerLatLng = marker.getPosition();
-        Point startPoint = proj.toScreenLocation(markerLatLng);
-        startPoint.offset(0, -100);
-        final LatLng startLatLng = proj.fromScreenLocation(startPoint);
-
-        final Interpolator interpolator = new BounceInterpolator();
-
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                long elapsed = SystemClock.uptimeMillis() - startTime;
-                float t = interpolator.getInterpolation((float) elapsed / duration);
-                double lng = t * markerLatLng.longitude + (1 - t) * startLatLng.longitude;
-                double lat = t * markerLatLng.latitude + (1 - t) * startLatLng.latitude;
-                marker.setPosition(new LatLng(lat, lng));
-
-                if (t < 1.0) {
-                    // Post again 16ms later.
-                    handler.postDelayed(this, 16);
-                }
-            }
-        });
-
-        //return false; //have not consumed the event
-        return true; //have consumed the event
-    }
     @Override
     public void onInfoWindowClick (Marker marker){
         Toast.makeText(this, marker.getTitle(), Toast.LENGTH_LONG).show();
@@ -262,86 +153,6 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
         return false;
     }
 
-    /**
-     * DIRECTIONS API IMPLEMENTATION
-     *
-     * */
-    private void plotRoute(String end) {
-        String origin = ""+position.latitude+position.longitude;
-        String destination = end;
-        if (origin.isEmpty()) {
-            Toast.makeText(this, "Please enter origin address!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (destination.isEmpty()) {
-            Toast.makeText(this, "Please enter destination address!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        try {
-            new DirectionFinder(this, origin, destination).execute();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onDirectionFinderStart() {
-        progressDialog = ProgressDialog.show(this, "Please wait.",
-                "Finding direction..!", true);
-
-        if (originMarkers != null) {
-            for (Marker marker : originMarkers) {
-                marker.remove();
-            }
-        }
-
-        if (destinationMarkers != null) {
-            for (Marker marker : destinationMarkers) {
-                marker.remove();
-            }
-        }
-
-        if (polylinePaths != null) {
-            for (Polyline polyline : polylinePaths) {
-                polyline.remove();
-            }
-        }
-    }
-
-    @Override
-    public void onDirectionFinderSuccess(List<Route> routes) {
-        progressDialog.dismiss();
-        polylinePaths = new ArrayList<>();
-        originMarkers = new ArrayList<>();
-        destinationMarkers = new ArrayList<>();
-
-        for (Route route : routes) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(route.startLocation, 16));
-            // ((TextView) findViewById(R.id.tvDuration)).setText(route.duration.text);
-            //((TextView) findViewById(R.id.tvDistance)).setText(route.distance.text);
-
-            originMarkers.add(mMap.addMarker(new MarkerOptions()
-                    //.icon(BitmapDescriptorFactory.fromResource(R.drawable.start_blue))
-                    .title(route.startAddress)
-                    .position(route.startLocation)));
-            destinationMarkers.add(mMap.addMarker(new MarkerOptions()
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.end_green))
-                    .title(route.endAddress)
-                    .position(route.endLocation)));
-
-            PolylineOptions polylineOptions = new PolylineOptions().
-                    geodesic(true).
-                    color(Color.BLUE).
-                    width(3);
-
-            for (int i = 0; i < route.points.size(); i++)
-                polylineOptions.add(route.points.get(i));
-
-            polylinePaths.add(mMap.addPolyline(polylineOptions));
-        }
-    }
-
 
     /**
      * LOCATION LISTENER EVENTS
@@ -361,7 +172,7 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
     protected void onResume() {
         super.onResume();
 
-        checkPlayServices();
+        getServicesAvailable();
 
         // Resuming the periodic location updates
         if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
@@ -380,7 +191,6 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
     @Override
     protected void onPause() {
         super.onPause();
-        //stopLocationUpdates();
     }
 
     //Method to display the location on UI
@@ -414,22 +224,8 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
             }
         }
     }
-    //Method to toggle periodic location updates
-    private void togglePeriodicLocationUpdates() {
-        if (!mRequestingLocationUpdates) {
-            mRequestingLocationUpdates = true;
-            // Starting the location updates
-            startLocationUpdates();
-            Log.d(TAG, "Periodic location updates started!");
 
-        } else {
 
-            mRequestingLocationUpdates = false;
-            // Stopping the location updates
-           // stopLocationUpdates();
-            Log.d(TAG, "Periodic location updates stopped!");
-        }
-    }
     // Creating google api client object
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -440,30 +236,12 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
     //Creating location request object
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(UPDATE_INTERVAL);
-        mLocationRequest.setFastestInterval(FATEST_INTERVAL);
+        mLocationRequest.setInterval(AppConstants.UPDATE_INTERVAL);
+        mLocationRequest.setFastestInterval(AppConstants.FATEST_INTERVAL);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
+        mLocationRequest.setSmallestDisplacement(AppConstants.DISPLACEMENT);
     }
 
-     //Method to verify google play services on the device
-    private boolean checkPlayServices() {
-        int resultCode = GooglePlayServicesUtil
-                .isGooglePlayServicesAvailable(this);
-        if (resultCode != ConnectionResult.SUCCESS) {
-            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-                GooglePlayServicesUtil.getErrorDialog(resultCode, this,
-                        PLAY_SERVICES_RESOLUTION_REQUEST).show();
-            } else {
-                Toast.makeText(getApplicationContext(),
-                        "This device is not supported.", Toast.LENGTH_LONG)
-                        .show();
-                finish();
-            }
-            return false;
-        }
-        return true;
-    }
 
     //Starting the location updates
     protected void startLocationUpdates() {

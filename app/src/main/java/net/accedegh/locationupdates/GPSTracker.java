@@ -1,4 +1,4 @@
-package net.accedegh.locationupdates.utils.MapsApi;
+package net.accedegh.locationupdates;
 
 import android.Manifest;
 import android.app.AlertDialog.Builder;
