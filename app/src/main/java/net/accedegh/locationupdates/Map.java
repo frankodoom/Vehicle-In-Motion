@@ -117,22 +117,17 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
     private List<Marker> destinationMarkers = new ArrayList<>();
     private List<Polyline> polylinePaths = new ArrayList<>();
     private ProgressDialog progressDialog;
-    private  HubConnection connection;
-    private String chatMessage;//private final Handler mHandler;
-    private HubProxy mainHubProxy  ;
-    private TextView mLogger;
-    private Handler handler;
-    private String pinMode;
+    private int markerCount;
+
     //private Marker marker;
     LatLng position;
-    String[] temp;
-    String delimiter = ",";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
-
+        markerCount=0;
         //Check If Google Services Is Available
         if (getServicesAvailable()) {
             // Building the GoogleApi client
@@ -178,30 +173,36 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
     // Add A Map Pointer To The MAp Fragment
     public void addMarker(GoogleMap googleMap, double lat, double lon) {
 
-        if(pinMode=="initialized"){
+        if(markerCount==1){
             animateMarker(mLastLocation,mk);
         }
-        //Set Custom BitMap for Pointer
-        int height = 80;
-        int width = 45;
-        BitmapDrawable bitmapdraw = (BitmapDrawable) getResources().getDrawable(R.mipmap.icon_car);
-        Bitmap b = bitmapdraw.getBitmap();
-        Bitmap smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
-        mMap = googleMap;
 
-        LatLng latlong = new LatLng(lat, lon);
-       mk= mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon))
-                //.icon(BitmapDescriptorFactory.fromResource(R.drawable.pin3))
-                .icon(BitmapDescriptorFactory.fromBitmap((smallMarker))));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlong, 16));
-        pinMode="initialized";
+        else if (markerCount==0){
+            //Set Custom BitMap for Pointer
+            int height = 80;
+            int width = 45;
+            BitmapDrawable bitmapdraw = (BitmapDrawable) getResources().getDrawable(R.mipmap.icon_car);
+            Bitmap b = bitmapdraw.getBitmap();
+            Bitmap smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
+            mMap = googleMap;
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            return;
+            LatLng latlong = new LatLng(lat, lon);
+            mk= mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon))
+                    //.icon(BitmapDescriptorFactory.fromResource(R.drawable.pin3))
+                    .icon(BitmapDescriptorFactory.fromBitmap((smallMarker))));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlong, 16));
+
+            //Set Marker Count to 1 after first marker is created
+            markerCount=1;
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                return;
+            }
+            //mMap.setMyLocationEnabled(true);
+            startLocationUpdates();
         }
-        mMap.setMyLocationEnabled(true);
-        startLocationUpdates();
+
     }
 
     //Marker Click Events
