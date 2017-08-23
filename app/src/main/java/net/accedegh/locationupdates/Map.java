@@ -93,7 +93,8 @@ public class Map extends FragmentActivity implements OnMapReadyCallback,
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        mMap.setMyLocationEnabled(true);
+        //Uncomment To Show Google Location Blue Pointer
+       // mMap.setMyLocationEnabled(true);
     }
 
     Marker mk = null;
