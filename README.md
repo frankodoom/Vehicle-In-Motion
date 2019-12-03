@@ -1,4 +1,4 @@
-# MotionVehicleTracker
+# Vehicle-In-Motion
 
 This is a basic implementation of live motion tracking using Google Maps Api, a similar implemtnation with Uber Apps.
 
